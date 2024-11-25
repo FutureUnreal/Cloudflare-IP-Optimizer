@@ -49,13 +49,14 @@
 ```json
 {
   "ip_ranges": [
-    "2.1.1.0",
-    "2.0.0.0"
+    "1.1.1.0",
+    "1.0.0.0"
   ],
   "test_count": 4,        // ping测试次数
   "test_timeout": 2,      // 超时时间(秒)
   "max_workers": 20,      // 并发测试数
-  "best_ip_count": 10     // 保留最佳IP数量
+  "best_ip_count": 10,    // 保留最佳IP数量
+  "chunk_size": 1000      // 每批测试的IP数量
 }
 ```
 

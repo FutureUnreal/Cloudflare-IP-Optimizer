@@ -1,0 +1,47 @@
+name: Test IP and Update DNS
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时运行
+  workflow_dispatch:        # 支持手动触发
+  push:
+    paths:
+      - 'config.json'      # 配置文件更改时触发
+
+jobs:
+  test-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run IP tests
+      run: python scripts/test_ips.py
+    
+    - name: Update DNS records
+      if: success()
+      run: python scripts/update_dns.py
+      env:
+        CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+    
+    - name: Save test results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: |
+          best_ips.json
+          ip_test_results_*.json
+          logs/*.log

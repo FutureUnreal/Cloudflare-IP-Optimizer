@@ -50,13 +50,14 @@ Modify `config.json`:
 ```json
 {
   "ip_ranges": [
-    "2.1.1.0",
-    "2.0.0.0"
+    "1.1.1.0",
+    "1.0.0.0"
   ],
   "test_count": 4,        // number of ping tests
   "test_timeout": 2,      // timeout in seconds
   "max_workers": 20,      // concurrent test workers
-  "best_ip_count": 10     // number of best IPs to keep
+  "best_ip_count": 10,     // number of best IPs to keep
+  "chunk_size": 1000      // number of IPs tested per batch
 }
 ```
 
