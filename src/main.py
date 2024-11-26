@@ -4,22 +4,34 @@ from pathlib import Path
 from .ip_tester import IPTester
 from .pool_updater import PoolUpdater
 from .worker_updater import WorkerUpdater
-from .utils import setup_logging
+
+def setup_logging(name='main'):
+    """设置日志"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    return logging.getLogger(name)
 
 def load_configs():
     """加载配置文件"""
-    with open('config/settings.json') as f:
+    # 获取项目根目录路径
+    root_dir = Path(__file__).parent.parent
+    
+    # 加载配置文件
+    with open(root_dir / 'config' / 'settings.json') as f:
         settings = json.load(f)
     
-    with open('config/ip_ranges.json') as f:
+    with open(root_dir / 'config' / 'ip_ranges.json') as f:
         ip_ranges = json.load(f)
     
     settings.update(ip_ranges)
+    
     return settings
 
 def main():
     # 设置日志
-    logger = setup_logging('main')
+    logger = setup_logging()
     logger.info("开始更新流程")
 
     try:
