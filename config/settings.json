@@ -1,0 +1,23 @@
+{
+  "test_count": 4,
+  "test_timeout": 2,
+  "max_workers": 5,
+  "ips_per_region": 2,
+  "chunk_size": 10,
+  "retry_times": 3,
+  "retry_interval": 2,
+  "regions": [
+      "EAST",
+      "NORTH",
+      "SOUTH",
+      "CENTRAL",
+      "SOUTHWEST",
+      "NORTHWEST",
+      "NORTHEAST"
+  ],
+  "isps": [
+      "CHINA_TELECOM",
+      "CHINA_UNICOM",
+      "CHINA_MOBILE"
+  ]
+}

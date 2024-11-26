@@ -1,114 +1,140 @@
-# Cloudflare IP Optimizer
+# Cloudflare Smart IP
 
-[![Test and Update DNS](https://github.com/yourusername/cloudflare-ip-optimizer/actions/workflows/ip-test.yml/badge.svg)](https://github.com/yourusername/cloudflare-ip-optimizer/actions/workflows/ip-test.yml)
+[![Test and Update DNS](https://github.com/yourusername/cloudflare-smart-ip/actions/workflows/update-worker.yml/badge.svg)](https://github.com/yourusername/cloudflare-smart-ip/actions/workflows/update-worker.yml)
 
-一个用于自动测试和优选 Cloudflare IP 的工具。通过测试指定 IP 段的网络连接质量，找出最优 IP 并自动更新到 Cloudflare DNS 记录。
+自动测试和优化 Cloudflare IP 的工具。使用 ITDOG 测速节点进行网络质量测试，根据不同运营商和地区自动更新最优 IP 池，并自动部署到 Cloudflare Worker。
 
-[English](./README.md) | 简体中文
+[English](./README.md) | [简体中文](#简体中文)
 
 ## ✨ 特性
 
-- 🚀 自动测试 IP 连接质量
-- 🔄 自动更新 DNS 记录到最优 IP
-- ⏱️ 支持定时任务
-- 📊 详细的测试日志和结果
-- 🔌 完整的端口连通性测试
-- 🛡️ 内置异常处理和重试机制
+- 🚀 使用 ITDOG 节点自动测试 IP 质量
+- 📊 智能分析运营商和地区
+- 🔄 自动更新 Worker 配置
+- 🌐 多区域、多运营商支持
+- ⚡ 针对中国网络优化
+- 🔍 详细的测试日志
+
+## 🛠️ 支持的地区
+
+- 华东 (EAST)：上海、江苏、浙江、安徽、福建、江西、山东
+- 华北 (NORTH)：北京、天津、河北、山西、内蒙古
+- 华南 (SOUTH)：广东、广西、海南
+- 华中 (CENTRAL)：河南、湖北、湖南
+- 西南 (SOUTHWEST)：重庆、四川、贵州、云南、西藏
+- 西北 (NORTHWEST)：陕西、甘肃、青海、宁夏、新疆
+- 东北 (NORTHEAST)：辽宁、吉林、黑龙江
+
+## 🌟 支持的运营商
+
+- 中国电信 (CHINA_TELECOM)
+- 中国联通 (CHINA_UNICOM)
+- 中国移动 (CHINA_MOBILE)
 
 ## 🚀 快速开始
 
-### 1. Fork 本仓库
+1. Fork 本仓库
 
-点击右上角的 `Fork` 按钮复制本仓库到你的账号。
+2. 在 GitHub 仓库中设置 Secrets:
+```
+CF_ACCOUNT_ID: Cloudflare 账户 ID
+CF_API_TOKEN: Cloudflare API 令牌
+CF_WORKER_NAME: Worker 名称
+```
 
-### 2. 配置 GitHub Secrets
-
-在你 fork 的仓库中添加以下 Secrets:
-
-- `CF_API_TOKEN`: Cloudflare API Token
-- `CF_ZONE_ID`: Cloudflare Zone ID
-- `DOMAIN_NAME`: 需要更新的域名 (例如: fast.example.com)
-
-### 3. 获取 Cloudflare 配置
-
-#### 获取 API Token:
-1. 访问 [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens)
-2. 创建新的 API Token
-3. 确保包含以下权限:
-   - Zone - DNS - Edit
-   - Zone - Zone - Read
-
-#### 获取 Zone ID:
-1. 登录 Cloudflare 控制台
-2. 选择你的域名
-3. 在右侧概述页面找到 Zone ID
-
-### 4. 自定义配置
-
-修改 `config.json`:
+3. 修改配置文件 (`config/settings.json`):
 ```json
 {
-  "ip_ranges": [
-    "1.1.1.0",
-    "1.0.0.0"
-  ],
-  "test_count": 4,        // ping测试次数
-  "test_timeout": 2,      // 超时时间(秒)
-  "max_workers": 20,      // 并发测试数
-  "best_ip_count": 10,    // 保留最佳IP数量
-  "chunk_size": 1000      // 每批测试的IP数量
+    "test_count": 4,
+    "test_timeout": 2,
+    "max_workers": 5,
+    "ips_per_region": 2,
+    "chunk_size": 10,
+    "retry_times": 3
 }
 ```
 
-### 5. 启用 GitHub Actions
+4. 启用 Github Actions
 
-1. 进入仓库的 Actions 页面
-2. 点击启用 Actions
-3. 可以手动触发一次工作流测试配置
-
-## 📊 工作原理
-
-1. 定时或手动触发测试
-2. 并发测试指定 IP 段的连接质量
-3. 基于延迟和连通性排序筛选
-4. 自动更新 Cloudflare DNS 记录
-5. 保存测试结果和日志
-
-## 🔍 测试结果
-
-每次运行后，你可以在 Actions 页面查看：
-
-- 完整的测试日志
-- 最优 IP 列表
-- DNS 更新状态
-- 测试统计数据
-
-## 💻 本地测试
-
-如果需要在本地运行测试：
+## 📝 本地测试
 
 ```bash
+# 克隆仓库
+git clone https://github.com/yourusername/cloudflare-smart-ip.git
+cd cloudflare-smart-ip
+
 # 安装依赖
 pip install -r requirements.txt
 
-# 测试IP
-python scripts/test_ips.py
+# 设置环境变量
+export CF_ACCOUNT_ID="你的账户ID"
+export CF_API_TOKEN="你的API令牌"
+export CF_WORKER_NAME="你的Worker名称"
 
-# 更新DNS(需要设置环境变量)
-python scripts/update_dns.py
+# 运行测试
+python -m src.main
 ```
 
-## ⚠️ 注意事项
+## 📊 测试结果
 
-1. 合理设置测试频率，建议间隔不少于 1 小时
-2. 定期检查 GitHub Actions 运行日志
-3. 确保 Cloudflare API Token 权限正确
-4. 遇到问题请先查看 Actions 日志
+每次运行后可以查看：
+- `results/ip_pools_latest.json`: 最新的 IP 池配置
+- `logs/`: 详细的测试和更新日志
 
-## 🤝 贡献指南
+## 🔍 工作原理
 
-欢迎提交 Issue 和 Pull Request，让这个工具变得更好！
+1. IP 测试：
+   - 使用遍布全国的 ITDOG 测速节点
+   - 测试每个 IP 的连接质量
+   - 分析延迟和丢包率
 
-## 📝 License
+2. 地区检测：
+   - 使用 Cloudflare 地区代码
+   - 省份到区域的映射
+   - 支持坐标定位兜底
 
-[MIT License](./LICENSE)
+3. 运营商检测：
+   - 基于 ASN 的运营商识别
+   - 支持主要中国运营商
+   - 优雅处理未知 ASN
+
+4. Worker 更新：
+   - 自动生成配置
+   - 智能 IP 池选择
+   - 自动部署
+
+## 📈 测试节点
+
+使用 ITDOG 节点覆盖：
+- 中国多个地区
+- 主要运营商
+- 多种网络环境
+
+## ⚙️ 配置说明
+
+### IP 范围 (`config/ip_ranges.json`):
+```json
+{
+    "ip_ranges": [
+        "1.1.1.0",
+        "1.0.0.0",
+        "104.16.0.0"
+    ]
+}
+```
+
+### 设置 (`config/settings.json`):
+```json
+{
+    "test_count": 4,
+    "test_timeout": 2,
+    "max_workers": 5,
+    "ips_per_region": 2,
+    "chunk_size": 10,
+    "retry_times": 3
+}
+```
+
+## 📃 许可证
+
+[MIT 许可证](./LICENSE)
