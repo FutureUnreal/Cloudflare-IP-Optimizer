@@ -1,2 +1,4 @@
 requests==2.31.0
+websockets==12.0
 tenacity==8.2.2
+aiohttp==3.9.1
