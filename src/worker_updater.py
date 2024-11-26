@@ -27,53 +27,86 @@ class WorkerUpdater:
         
         self.base_url = "https://api.cloudflare.com/client/v4"
 
-    def load_template(self) -> str:
-        """加载Worker模板"""
-        try:
-            with open('templates/worker_template.js', 'r') as f:
-                return f.read()
-        except Exception as e:
-            self.logger.error(f"加载Worker模板失败: {str(e)}")
-            raise
-
-    def generate_worker_script(self, ip_pools: Dict) -> str:
-        """生成Worker脚本"""
-        template = self.load_template()
-        
-        # 替换IP池配置
-        script = template.replace(
-            '{{IP_POOLS}}',
-            json.dumps(ip_pools, indent=2)
-        ).replace(
-            '{{UPDATE_TIME}}',
-            datetime.now().isoformat()
-        )
-        
-        return script
-
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    def update_worker(self, script_content: str) -> bool:
+    def update_worker(self, ip_pools: Dict) -> bool:
         """更新Worker代码"""
         try:
-            url = f"{self.base_url}/accounts/{self.account_id}/workers/scripts/{self.worker_name}"
+            # 生成Worker代码
+            script_content = self._generate_worker_script(ip_pools)
             
+            # 添加这行来打印生成的脚本内容
+            self.logger.debug(f"Generated script: {script_content}")
+            
+            # 验证脚本内容
+            if not script_content.strip():
+                self.logger.error("Worker脚本内容为空")
+                return False
+
+            # 构建请求URL
+            url = f"{self.base_url}/accounts/{self.account_id}/workers/scripts/{self.worker_name}"
+
             # 发送更新请求
             response = requests.put(
                 url,
                 headers=self.headers,
-                data=script_content
+                data=script_content.encode('utf-8')
             )
-            
+
+            # 添加这行来打印响应内容
+            self.logger.debug(f"Response content: {response.text}")
+
             if response.status_code == 200:
                 self.logger.info(f"Worker更新成功: {self.worker_name}")
+                self._save_worker_script(script_content)
                 return True
             else:
                 self.logger.error(f"Worker更新失败: {response.text}")
                 return False
-                
+
         except Exception as e:
             self.logger.error(f"更新Worker时发生错误: {str(e)}")
             raise
+
+    def _generate_worker_script(self, ip_pools: Dict) -> str:
+        """生成Worker脚本"""
+        try:
+            # 加载模板
+            with open('templates/worker_template.js', 'r', encoding='utf-8') as f:
+                template = f.read()
+
+            # 替换变量
+            script = template.replace(
+                '{{IP_POOLS}}', 
+                json.dumps(ip_pools, indent=2)
+            ).replace(
+                '{{UPDATE_TIME}}',
+                datetime.now().isoformat()
+            )
+
+            return script
+
+        except Exception as e:
+            self.logger.error(f"生成Worker脚本失败: {str(e)}")
+            raise
+
+    def _save_worker_script(self, script_content: str):
+        """保存Worker脚本副本"""
+        try:
+            results_dir = Path('results')
+            results_dir.mkdir(exist_ok=True)
+            
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # 保存带时间戳的版本
+            with open(results_dir / f'worker_{timestamp}.js', 'w', encoding='utf-8') as f:
+                f.write(script_content)
+            
+            # 保存最新版本
+            with open(results_dir / 'worker_latest.js', 'w', encoding='utf-8') as f:
+                f.write(script_content)
+
+        except Exception as e:
+            self.logger.error(f"保存Worker脚本失败: {str(e)}")
 
     def update(self, ip_pools: Dict = None) -> bool:
         """更新Worker"""
@@ -87,11 +120,8 @@ class WorkerUpdater:
                     self.logger.error(f"加载IP池配置失败: {str(e)}")
                     return False
 
-            # 生成Worker脚本
-            script_content = self.generate_worker_script(ip_pools)
-            
             # 更新Worker
-            return self.update_worker(script_content)
+            return self.update_worker(ip_pools)
             
         except Exception as e:
             self.logger.error(f"更新过程发生错误: {str(e)}")
